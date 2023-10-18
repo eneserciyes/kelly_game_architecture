@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The Kelly Game</title>
+    <link rel="stylesheet" href="main.css"/>
+    <script src="main.js"></script>
+  </head>
+  <body>
+    <main>
+      <section class="game">
+        <section class="players">
+          <div class="player b">
+            <div class="player-icon__container">
+              <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" height="100%" width="100%" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" viewBox="8 8 67 67" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <circle cy="37.5" cx="37" r="28.563" fill="#FF6319"/>
+                <path d="m25.763 22.542h13.96c7.04 0 8.84 4.4 8.84 7.36 0 4.12-2.32 5.28-3.52 5.88 3.52 1.32 4.439 4.12 4.439 6.96 0 2.279-0.96 4.439-2.479 5.92-1.641 1.6-3.2 2.6-9.08 2.6h-12.16v-28.72zm5.76 11.24h7.04c2.36 0 4.24-0.92 4.24-3.2 0-2.36-1.68-3.08-4.4-3.08h-6.88v6.28zm0 12.52h7.36c2.92 0 4.6-1.28 4.6-4.2 0-2.52-2.16-3.479-4.319-3.479h-7.641v7.679z" fill="#fff"/>
+              </svg>
+            </div>
+            <span class="player-name" id="name-b">6 Av Express</span>
+            <div class="player-balance__container">
+              <span class="player-balance__dollar-sign">$</span>
+              <span class="player-balance__number"id="balance-b">-</span>
+            </div>
+          </div>
+          <div class="player a">
+            <div class="player-icon__container">
+              <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" height="100%" width="100%" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" viewBox="8 8 67 67" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <circle cy="37.5" cx="37" r="28.563" fill="#2850AD"/>
+                <path d="m30.06 51.811h-6.32l10.24-28.721h6.92l10.12 28.721h-6.52l-1.84-5.92h-10.6l-2 5.92zm3.6-10.88h7.32l-3.56-11.36h-0.08l-3.68 11.36z" fill="#fff"/>
+              </svg>
+            </div>
+            <span class="player-name" id="name-a">8 Av Express</span>
+            <div class="player-balance__container">
+              <span class="player-balance__dollar-sign">$</span>
+              <span class="player-balance__number" id="balance-a">-</span>
+            </div>
+          </div>
+          <div class="player player-extension a">
+            <div><span>Leads by <span class="lead-count" id="lead-count-a"></span> as</span>
+              <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" height="100%" width="100%" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" viewBox="8 8 67 67" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <circle cy="37.5" cx="37" r="28.563" fill="#2850AD"/>
+                <path d="m30.06 51.811h-6.32l10.24-28.721h6.92l10.12 28.721h-6.52l-1.84-5.92h-10.6l-2 5.92zm3.6-10.88h7.32l-3.56-11.36h-0.08l-3.68 11.36z" fill="#fff"/>
+              </svg>
+            </div>
+          </div>
+          <div class="player player-extension b">
+            <div><span>Leads by <span class="lead-count" id="lead-count-b"></span> as</span>
+              <svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" height="100%" width="100%" version="1.1" y="0px" x="0px" xmlns:cc="http://creativecommons.org/ns#" viewBox="8 8 67 67" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                <circle cy="37.5" cx="37" r="28.563" fill="#FF6319"/>
+                <path d="m25.763 22.542h13.96c7.04 0 8.84 4.4 8.84 7.36 0 4.12-2.32 5.28-3.52 5.88 3.52 1.32 4.439 4.12 4.439 6.96 0 2.279-0.96 4.439-2.479 5.92-1.641 1.6-3.2 2.6-9.08 2.6h-12.16v-28.72zm5.76 11.24h7.04c2.36 0 4.24-0.92 4.24-3.2 0-2.36-1.68-3.08-4.4-3.08h-6.88v6.28zm0 12.52h7.36c2.92 0 4.6-1.28 4.6-4.2 0-2.52-2.16-3.479-4.319-3.479h-7.641v7.679z" fill="#fff"/>
+              </svg>
+            </div>
+          </div>
+        </section>
+        <section class="gameboard">
+          <div class="gameboard-mask">
+            <span id="gameboard-mask-title">Connecting...</span>
+          </div>
+          <div class="gameboard-pointer" style="top: -22px;">
+            <svg viewBox="0 0 120 120">
+              <polygon points="60 105, 110 20, 10 20" style="fill: #fff; stroke: #000; stroke-width: 16;"/>
+            </svg>
+          </div>
+          <div class="gameboard-pointer" style="bottom: -27px;">
+            <svg viewBox="0 0 120 120">
+              <polygon points="60 15, 110 100, 10 100" style="fill: #fff; stroke: #000; stroke-width: 16;"/>
+            </svg>
+          </div>
+          <div class="rounds">
+            <div class="round__container">
+              <div class="round-column b gray" style="height: 70%;">
+                <span class="round-column-bet">30</span>
+              </div>
+              <div class="round-column a" style="height: 30%;">
+                <span class="round-column-bet thousand">12<span>020</span></span>
+              </div>
+            </div>
+            <div class="round__container">
+              <div class="round-decider" style="bottom: calc(40% - 20px);">0.40</div>
+              <div class="round-column b" style="height: 60%;">
+                <span class="round-column-bet">30</span>
+              </div>
+              <div class="round-column a gray" style="height: 40%;">
+                <span class="round-column-bet thousand">12<span>020</span></span>
+              </div>
+            </div>
+            <div class="round__container">
+              <div class="round-column b" style="height: 30%;">
+                <span class="round-column-bet">100</span>
+              </div>
+              <div class="round-column a" style="height: 70%;">
+                <span class="round-column-bet">500</span>
+              </div>
+            </div>
+            <div class="round__container">
+              <div class="round-column b" style="height: 50%;">
+                <span class="round-column-num">50</span>
+              </div>
+              <div class="round-column a" style="height: 50%;">
+                <span class="round-column-num">50</span>
+              </div>
+            </div>
+            <div class="round__container">
+              <div class="round-column b" style="height: 55%;">
+                <span class="round-column-num">55</span>
+              </div>
+              <div class="round-column a" style="height: 45%;">
+                <span class="round-column-num">45</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>

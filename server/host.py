@@ -1,7 +1,8 @@
 import asyncio
 import random
 from enum import Enum
-import sys
+import json
+from syncremote import SyncRemote
 
 players = []
 
@@ -33,7 +34,7 @@ class GameStage(Enum):
   ENDED = 3
 
 class Game:
-  def __init__(self, players, gameend_cb, balance, prob_seq):
+  def __init__(self, players, server, balance, prob_seq):
     self.A = players[0]
     self.B = players[1]
     self.A.game = self
@@ -51,7 +52,8 @@ class Game:
       "B": None
     }
     self.first_set_result = None
-    self.gameend_cb = gameend_cb
+    self.server = server
+    self.gameend_cb = server.closeServer
     print("\n\033[36m== Game Info ==\033[0m\n")
     print("Player A Balance: {}".format(self.A.balance))
     print("Player B Balance: {}".format(self.B.balance))
@@ -85,6 +87,11 @@ class Game:
       return
     player = self.getPlayer(side)
     print("Player {} ({}) put ${}".format(side, player.name, amount))
+    self.server.sendRemote("bet", {
+      "side": side,
+      "round": self.round,
+      "amount": amount
+    })
     if amount > player.balance:
       warn("Betting more than balance, maximum balance placed as bet")
       amount = player.balance
@@ -107,11 +114,19 @@ class Game:
       total_bet = min(total_bet, self.A.balance)
       self.B.balance += total_bet
       self.A.balance -= total_bet
+    winner = "A" if this_round_result < this_round_prob else "B"
     message = "{} {}".format(self.A.balance, self.B.balance)
+    self.server.sendRemote("result", {
+      "set": 1 if self.stage == GameStage.FIRST_SET else 2,
+      "round": self.round,
+      "result": this_round_result,
+      "winner": winner,
+      "balance": [self.A.balance, self.B.balance]
+    })
     print("Set {} Round {}: Player {} ({}) wins ${}. Balance: {} {}".format(
       "1" if self.stage == GameStage.FIRST_SET else "2",
       self.round + 1,
-      "A" if this_round_result < this_round_prob else "B",
+      winner,
       self.A.name if this_round_result < this_round_prob else self.B.name,
       total_bet,
       self.A.balance,
@@ -139,6 +154,7 @@ class Game:
         self.B.side = "B"
         self.A.balance = self.balance[0]
         self.B.balance = self.balance[1]
+        self.server.sendRemote("switchsides", balance_diff);
         print("\n\033[36m== 2nd Set Started ==\033[0m\n")
       else:
         print("\n\033[36m== Game Over ==\033[0m\n")
@@ -154,16 +170,34 @@ class Game:
         ))
         if score_diff > 0:
           print("\033[31;1;4m{}\033[0m\033[31;1m WINS!\033[0m".format(self.B.name))
+          winner = self.B.name
         elif score_diff < 0:
           print("\033[31;1;4m{}\033[0m\033[31;1m WINS!\033[0m".format(self.A.name))
+          winner = self.A.name
         else:
           print("\033[31;1mDRAW!\033[0m")
+          winner = ""
+        self.server.sendRemote("gameover", {
+          "winner": winner
+        })
         self.stage = GameStage.ENDED
         self.gameend_cb()
 
 class Server:
   def closeServer(self):
+    if self.remote:
+      self.remote.close()
     self.server.close()
+
+  def sendRemote(self, type, data = {}):
+    if self.remote:
+      try:
+        self.remote.send(json.dumps({
+          "type": type,
+          "data": data
+        }))
+      except:
+        warn("Failed to sync to remote")
   
   async def onNewConnection(self, reader, writer):
     socket_info = reader._transport.get_extra_info("peername")
@@ -179,8 +213,12 @@ class Server:
         elif len(players) < 2:
           player = Player(request[0:32], writer)
           players.append(player)
+          self.sendRemote("playerjoin", {
+            "side": "A" if len(players) == 1 else "B",
+            "name": player.name
+          })
           if len(players) == 2:
-            game = Game((players[0], players[1]), self.closeServer, self.initial_balance, self.prob_seq)
+            game = Game((players[0], players[1]), self, self.initial_balance, self.prob_seq)
             await game.start()
         else:
           print("\033[90;1mIllegal request from", socket_info, "\033[0m")
@@ -200,18 +238,24 @@ class Server:
     async with self.server:
       await self.server.serve_forever()
 
-  def __init__(self, host, port, initial_balance, prob_seq):
+  def __init__(self, host, port, initial_balance, prob_seq, remote = None):
     self.host = host
     self.port = port
     self.initial_balance = initial_balance
     self.prob_seq = prob_seq
+    self.remote = remote
+    self.sendRemote("info", {
+      "init_balance": initial_balance,
+      "seq": prob_seq
+    })
 
 if __name__ == "__main__":
   server = Server(
     host = "0.0.0.0",
     port = 4000,
     initial_balance = (6000, 6800),
-    prob_seq = list(random.randint(40, 70) / 100 for x in range(0, 20))
+    prob_seq = list(random.randint(40, 70) / 100 for x in range(0, 1000)),
+    remote = SyncRemote("ws://127.0.0.1:8765")
   )
   try:
     asyncio.run(server.run())
