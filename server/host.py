@@ -255,7 +255,7 @@ if __name__ == "__main__":
     port = 4000,
     initial_balance = (6000, 6800),
     prob_seq = list(random.randint(40, 70) / 100 for x in range(0, 1000)),
-    remote = SyncRemote("ws://127.0.0.1:8765")
+    # remote = SyncRemote("ws://127.0.0.1:8765")
   )
   try:
     asyncio.run(server.run())

@@ -62,3 +62,7 @@ Response example:
 ```
 
 This interaction will repeat `2n` rounds. After the first `n` rounds, players should switch sides and reset their balance, but **no additional interaction is expected**.
+
+## Web Spectator
+
+To run the simple web spectator, please keep the `exchange.py` running in background first, and open the webpage at `web/index.html`. Specify the websocket address around `host.py:258` by providing the URI to the `remote` parameter of the `Server` class. Then, run the server and both players and view results on the webpage. You may need to refresh the web page before each game begins.
