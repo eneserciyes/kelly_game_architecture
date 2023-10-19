@@ -2,6 +2,7 @@ import asyncio
 import random
 from enum import Enum
 import json
+from timer import Timer
 from syncremote import SyncRemote
 
 players = []
@@ -16,6 +17,7 @@ class Player:
     self.game = None
     self.side = None
     self.name = name
+    self.timer = Timer()
 
   def onMessage(self, message):
     try:
@@ -75,6 +77,8 @@ class Game:
       self.B.balance,
       " ".join(map(str, self.prob_seq))
     ))
+    self.A.timer.start()
+    self.B.timer.start()
     print("\n\033[36m== 1st Set Started ==\033[0m\n")
     self.stage = GameStage.FIRST_SET
   
@@ -86,6 +90,7 @@ class Game:
       warn("Bet amount already set for player " + str(side))
       return
     player = self.getPlayer(side)
+    player.timer.stop()
     print("Player {} ({}) put ${}".format(side, player.name, amount))
     self.server.sendRemote("bet", {
       "side": side,
@@ -121,7 +126,8 @@ class Game:
       "round": self.round,
       "result": this_round_result,
       "winner": winner,
-      "balance": [self.A.balance, self.B.balance]
+      "balance": [self.A.balance, self.B.balance],
+      "time": [round(self.A.timer.get(), 3), round(self.B.timer.get(), 3)]
     })
     print("Set {} Round {}: Player {} ({}) wins ${}. Balance: {} {}".format(
       "1" if self.stage == GameStage.FIRST_SET else "2",
@@ -134,6 +140,8 @@ class Game:
     ))
     await self.A.sendMessage(message)
     await self.B.sendMessage(message)
+    self.A.timer.start()
+    self.B.timer.start()
     self.bet["A"] = None
     self.bet["B"] = None
     self.round += 1
@@ -158,6 +166,8 @@ class Game:
         print("\n\033[36m== 2nd Set Started ==\033[0m\n")
       else:
         print("\n\033[36m== Game Over ==\033[0m\n")
+        self.A.timer.stop()
+        self.B.timer.stop()
         total_score = (self.B.balance + self.first_set_result[0], self.A.balance + self.first_set_result[1])
         score_diff = total_score[0] - total_score[1]
         print("[Final Results]\n{} (Player B in second set): {} + {} = {} {}\n{} (Player A in second set): {} + {} = {} {}".format(
@@ -177,8 +187,18 @@ class Game:
         else:
           print("\033[31;1mDRAW!\033[0m")
           winner = ""
+        print("Time elapsed:\n{} - {:.3f}s\n{} - {:.3f}s".format(
+          self.B.name, self.B.timer.get(),
+          self.A.name, self.A.timer.get()
+        ))
         self.server.sendRemote("gameover", {
-          "winner": winner
+          "winner": winner,
+          "leadsby": abs(score_diff),
+          "names": [self.B.name, self.A.name],
+          "score": [
+            [self.first_set_result[0], self.first_set_result[1]],
+            [self.B.balance, self.A.balance]
+          ],
         })
         self.stage = GameStage.ENDED
         self.gameend_cb()
@@ -254,8 +274,8 @@ if __name__ == "__main__":
     host = "0.0.0.0",
     port = 4000,
     initial_balance = (6000, 6800),
-    prob_seq = list(random.randint(40, 70) / 100 for x in range(0, 1000)),
-    # remote = SyncRemote("ws://127.0.0.1:8765")
+    prob_seq = list(random.randint(40, 70) / 100 for x in range(0, 20)),
+    # remote = SyncRemote("ws://localhost:1019")
   )
   try:
     asyncio.run(server.run())

@@ -1,10 +1,4 @@
-import asyncio
-import websockets
 from websockets.sync.client import connect
-
-# async def echo(websocket):
-#   async for message in websocket:
-#     await websocket.send(message)
 
 class SyncRemote:
   def __init__(self, uri):

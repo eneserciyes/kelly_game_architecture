@@ -41,4 +41,4 @@ class ExchangeServer:
   def __init__(self, address, port):
     asyncio.run(self.run(address, port))
 
-ExchangeServer("localhost", "8765")
+ExchangeServer("0.0.0.0", "1019")

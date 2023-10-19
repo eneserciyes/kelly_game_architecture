@@ -69,6 +69,24 @@ function setBalance(balance) {
   document.getElementById("balance-b").innerText = balance[1];
 }
 
+function setTime(time) {
+  document.getElementById("timer-a").innerText = `Time elapsed: ${time[0].toFixed(2)}s`;
+  document.getElementById("timer-b").innerText = `Time elapsed: ${time[1].toFixed(2)}s`;
+}
+
+let hide_result_timer = -1;
+function showResult(player, title) {
+  window.clearInterval(hide_result_timer);
+  document.getElementsByClassName("game-result")[0].style["display"] = "flex";
+  document.getElementsByClassName("game-result-name")[0].innerText = player;
+  document.getElementsByClassName("game-result-title")[0].innerText = title;
+  hide_result_timer = window.setTimeout(hideResult, 4000);
+}
+
+function hideResult() {
+  document.getElementsByClassName("game-result")[0].style["display"] = "none";
+}
+
 const player_names = Array(2);
 function setPlayer(data) {
   if (data["side"] == "A") {
@@ -118,6 +136,7 @@ function setResult(data) {
   const result = data["result"];
   const balance = data["balance"];
   setBalance(balance);
+  setTime(data["time"]);
   // const column = document.querySelector(`.round__container:nth-child(${round + 1})`);
   // column.insertAdjacentHTML("beforeend", `
   //   <div class="round-decider" style="bottom: calc(${parseInt(result * 80)}% + 40px);">${result.toFixed(2)}</div>
@@ -133,6 +152,8 @@ function switchSides(balance_diff) {
     setScroll(0);
     document.getElementById("name-a").style.opacity = 0;
     document.getElementById("name-b").style.opacity = 0;
+    document.getElementById("timer-a").style.innerText = "";
+    document.getElementById("timer-b").style.innerText = "";
     window.setTimeout(() => {
       document.getElementById("name-a").innerText = player_names[1];
       document.getElementById("name-b").innerText = player_names[0];
@@ -141,17 +162,87 @@ function switchSides(balance_diff) {
     }, 500);
     if (balance_diff > 0) {
       document.getElementById("lead-count-a").innerText = balance_diff;
-      document.querySelector(".player-extension.a").style["top"] = "40px";
+      document.querySelector(".player-extension.a").style["bottom"] = "-46px";
     } else if (balance_diff < 0) {
       document.getElementById("lead-count-b").innerText = -balance_diff;
-      document.querySelector(".player-extension.b").style["bottom"] = "40px";
+      document.querySelector(".player-extension.b").style["top"] = "-46px";
+    } else {
+      showResult("First Set", "DRAW");
     }
     [init_balance[0], init_balance[1]] = [init_balance[1], init_balance[0]];
     initBoard();
     window.setTimeout(() => {
       hideMask();
     }, 1000);
-  }, 1000);
+  }, 2000);
+}
+
+function endGame(data) {
+  if (data["winner"] != "") {
+    showResult(data["winner"], "WINS");
+  } else {
+    showResult("Final Result", "DRAW");
+  }
+  document.getElementsByClassName("current-match")[0].innerHTML = `
+    <table>
+      <tr>
+        <td>${data["names"][0]}</td>
+        <td>
+          <div style="display: flex;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60px" height="60px" viewBox="0 0 125 125">
+              <circle cx="62.5" cy="62.5" r="50" fill="#FF6319"/>
+              <polygon points="83.8,36.9 73.5,36.9 62.6,76.2 51.8,36.9 41.4,36.9 56.1,87.3 69.1,87.3" fill="#FFF"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="60px" height="60px" viewBox="0 0 125 125">
+              <title>NYCS Bullet, Standard Set - Shuttles</title>
+              <circle cx="62.5" cy="62.5" r="50" fill="#808183"/>
+              <path d="M84,71.9c0-4.4-1.5-7.767-4.5-10.1c-2.2-1.733-5.567-3.133-10.1-4.2l-6.1-1.4c-3.6-0.8-5.7-1.333-6.3-1.6c-2.467-1-3.7-2.5-3.7-4.5c0-1.6,0.85-2.883,2.55-3.85c1.7-0.967,3.883-1.45,6.55-1.45c6.133,0,10.5,2.467,13.1,7.4l8.2-6.2c-5.133-6.867-12.2-10.3-21.2-10.3c-5.133,0-9.533,1.267-13.2,3.8c-4.2,2.933-6.3,6.933-6.3,12c0,4.2,1.533,7.467,4.6,9.8c2.2,1.733,5.7,3.167,10.5,4.3l5.6,1.3c3.733,0.867,6.233,1.633,7.5,2.3c1.667,0.933,2.5,2.267,2.5,4c0,2.067-1.133,3.667-3.4,4.8c-1.867,0.867-4.167,1.3-6.9,1.3c-6.533,0-11.533-2.533-15-7.6l-8.3,6c2.4,3.467,5.567,6.133,9.5,8c3.933,1.867,8.067,2.8,12.4,2.8c5.933,0,10.9-1.233,14.9-3.7C81.633,81.867,84,77.567,84,71.9z" fill="#FFF"/>
+            </svg>
+          </div>
+        </td>
+        <td>${data["names"][1]}</td>
+      </tr>
+      <tr>
+        <td class="money">${data["score"][0][0]}</td>
+        <td>1st Set</td>
+        <td class="money">${data["score"][0][1]}</td>
+      </tr>
+      <tr>
+        <td class="money">${data["score"][1][0]}</td>
+        <td>2nd Set</td>
+        <td class="money">${data["score"][1][1]}</td>
+      </tr>
+      <tr>
+        <td class="money">${data["score"][0][0] + data["score"][1][0]}</td>
+        <td>Total</td>
+        <td class="money">${data["score"][0][1] + data["score"][1][1]}</td>
+      </tr>
+    </table>
+  `;
+  function boldif(name, winner) {
+    if (name == winner) {
+      return `<span class="history-winner">${name}</span>`;
+    } else {
+      return name;
+    }
+  }
+  document.getElementsByClassName("save-button")[0].addEventListener("click", (e) => {
+    let history = localStorage.getItem("match_history_html") || "";
+    if (data["winner"] != "") {
+      history = `
+      <div class="history-record">
+        ${boldif(data["names"][0], data["winner"])} v. ${boldif(data["names"][1], data["winner"])} (${data["winner"]} leads by \$${data["leadsby"]})
+      </div>` + history;
+    } else {
+      history = `
+      <div class="history-record">
+        ${data["names"][0]} v. ${data["names"][1]} (DRAW)
+      </div>` + history;
+    }
+    localStorage.setItem("match_history_html", history);
+    window.location.reload();
+  });
+  document.getElementsByClassName("save-button")[0].style["display"] = "block";
 }
 
 let timeout = window.setTimeout(processInstr, 30);
@@ -183,6 +274,7 @@ function processInstr() {
         break;
       case "gameover":
         window.clearInterval(scroll_timer);
+        endGame(instr["data"]);
         break;
     }
   }
