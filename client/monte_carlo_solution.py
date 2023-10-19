@@ -1,6 +1,6 @@
 from solution import Solution
 import random
-SIMULATION_COUNT = 50000
+SIMULATION_COUNT = 20000
 
 def simulate_game(my_balance, opp_balance, win_probs, risk_factor_pos, risk_factor_neg):
     moving_avg = 0
